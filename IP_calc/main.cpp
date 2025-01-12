@@ -1,6 +1,8 @@
 #include<Windows.h>
 #include<CommCtrl.h>
 #include<iostream>
+#include<format>
+#include<string>
 #include"resource.h"
 
 BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -14,6 +16,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	CONST INT SIZE = 256;
+
 	switch (uMsg)
 	{
 	case WM_INITDIALOG:
@@ -68,11 +71,18 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				dwMask <<= (32 - dwPrefix);
 				if (dwPrefix != 0) SendMessage(hMask, IPM_SETADDRESS, 0, dwMask);
 			}
+			break;
 		}
 		case ID_OK:
 		{
-			CHAR sz_info[SIZE] = "Здесь будет информация о сети";
-			SendMessage(GetDlgItem(hwnd, IDC_STATIC_INFO_TEXT), WM_SETTEXT, 0, (LPARAM)sz_info);
+			SendMessage(hIp, IPM_GETADDRESS, 0, (LPARAM)&ipAddress);
+			SendMessage(hPrefix, WM_GETTEXT, SIZE, (LPARAM)sz_buffer);
+			int hosts = pow(2, 32 - atoi(sz_buffer)) - 2;
+			std::string sz_info = std::format(
+				"Network address: {0}.{1}.{2}.0\nBroadcast address: {0}.{1}.{2}.255\nMax number of hosts: {3}",
+				FIRST_IPADDRESS(ipAddress), SECOND_IPADDRESS(ipAddress), THIRD_IPADDRESS(ipAddress), hosts
+			);
+			SendMessage(GetDlgItem(hwnd, IDC_STATIC_INFO_TEXT), WM_SETTEXT, 0, (LPARAM)sz_info.c_str());
 			break;
 		}
 		case ID_CANCEL: EndDialog(hwnd, 0); break;
