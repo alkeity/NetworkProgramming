@@ -76,11 +76,16 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case ID_OK:
 		{
 			SendMessage(hIp, IPM_GETADDRESS, 0, (LPARAM)&ipAddress);
+			SendMessage(hMask, IPM_GETADDRESS, 0, (LPARAM)&ipMask);
 			SendMessage(hPrefix, WM_GETTEXT, SIZE, (LPARAM)sz_buffer);
+			DWORD dwNetworkAddress = ipAddress & ipMask;
+			DWORD dwBroadcastAddress = dwNetworkAddress | ~ipMask;
 			int hosts = pow(2, 32 - atoi(sz_buffer)) - 2;
+
 			std::string sz_info = std::format(
-				"Network address: {0}.{1}.{2}.0\nBroadcast address: {0}.{1}.{2}.255\nMax number of hosts: {3}",
-				FIRST_IPADDRESS(ipAddress), SECOND_IPADDRESS(ipAddress), THIRD_IPADDRESS(ipAddress), hosts
+				"Network address: {0}.{1}.{2}.{3}\nBroadcast address: {0}.{1}.{2}.{4}\nMax number of hosts: {5}",
+				FIRST_IPADDRESS(dwNetworkAddress), SECOND_IPADDRESS(dwNetworkAddress), THIRD_IPADDRESS(dwNetworkAddress),
+				FOURTH_IPADDRESS(dwNetworkAddress), FOURTH_IPADDRESS(dwBroadcastAddress), hosts
 			);
 			SendMessage(GetDlgItem(hwnd, IDC_STATIC_INFO_TEXT), WM_SETTEXT, 0, (LPARAM)sz_info.c_str());
 			break;
