@@ -11,7 +11,8 @@ using std::endl;
 
 #pragma comment(lib, "Ws2_32.lib")
 
-void main()
+
+int __cdecl main()
 {
 	setlocale(LC_ALL, "");
 	// 1. init WinSock
@@ -21,10 +22,12 @@ void main()
 	if (iResult != 0)
 	{
 		cout << "WinSock init failed with error " << iResult << endl;
-		return;
+		return 1;
 	}
 
 	// 2. create socket
+	SOCKET ConnectSocket = INVALID_SOCKET;
+
 	addrinfo* result = NULL;
 	addrinfo* ptr = NULL;
 	addrinfo hInst;
@@ -34,38 +37,59 @@ void main()
 	hInst.ai_socktype = SOCK_STREAM;
 	hInst.ai_protocol = IPPROTO_TCP;
 
-	iResult = getaddrinfo("192.168.56.1", DEFAULT_PORT, &hInst, &result);
+	iResult = getaddrinfo("127.0.0.1", DEFAULT_PORT, &hInst, &result);
 
 	if (iResult != 0)
 	{
 		cout << "getaddrinfo failed with error " << iResult << endl;
 		WSACleanup();
-		return;
+		return 1;
 	}
 
-	SOCKET ConnectSocket = socket(hInst.ai_family, hInst.ai_socktype, hInst.ai_protocol);
+	for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
+	{
+		ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+		if (ConnectSocket == INVALID_SOCKET)
+		{
+			cout << "Socket creation error " << WSAGetLastError() << endl;
+			WSACleanup();
+			return 1;
+		}
+
+		iResult = connect(ConnectSocket, ptr->ai_addr, ptr->ai_addrlen);
+		if (iResult == SOCKET_ERROR)
+		{
+			cout << "Socket error during connection.\n";
+			closesocket(ConnectSocket);
+			continue;
+		}
+		break;
+	}
+
+	/*SOCKET ConnectSocket = socket(hInst.ai_family, hInst.ai_socktype, hInst.ai_protocol);
 	if (ConnectSocket == INVALID_SOCKET)
 	{
 		cout << "Socket creation error " << WSAGetLastError() << endl;
 		freeaddrinfo(result);
 		WSACleanup();
 		return;
-	}
+	}*/
 
 	// 3. server connection
-	iResult = connect(ConnectSocket, hInst.ai_addr, hInst.ai_addrlen);
+	/*iResult = connect(ConnectSocket, hInst.ai_addr, hInst.ai_addrlen);
 	if (iResult == SOCKET_ERROR)
 	{
+		cout << "Socket error during connection.\n";
 		closesocket(ConnectSocket);
 		ConnectSocket = INVALID_SOCKET;
-	}
+	}*/
 	freeaddrinfo(result); // not needed anymore
 
 	if (ConnectSocket == INVALID_SOCKET)
 	{
 		cout << "Unable to connect to server.\n";
 		WSACleanup();
-		return;
+		return 1;
 	}
 
 	// 4. send / receive data
@@ -78,7 +102,7 @@ void main()
 		cout << "Sending data failed with error " << WSAGetLastError() << endl;
 		closesocket(ConnectSocket);
 		WSACleanup();
-		return;
+		return 1;
 	}
 
 	int received = 0;
@@ -99,4 +123,6 @@ void main()
 	}
 	closesocket(ConnectSocket);
 	WSACleanup();
+
+	return 0;
 }

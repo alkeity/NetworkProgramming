@@ -26,7 +26,6 @@ void main()
 
 	// 2. create socket
 	addrinfo* result = NULL;
-	addrinfo* ptr = NULL;
 	addrinfo hInst;
 
 	// get socket address
@@ -56,7 +55,7 @@ void main()
 	}
 
 	// 3. bind socket to port
-	iResult = bind(ListenSocket, result->ai_addr, result->ai_addrlen);
+	iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
 	if (iResult == SOCKET_ERROR)
 	{
 		cout << "Bind failed with error " << WSAGetLastError() << endl;
