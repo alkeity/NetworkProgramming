@@ -1,0 +1,102 @@
+﻿#include<iostream>
+#include<WinSock2.h>
+#include<WS2tcpip.h>
+
+using std::cin;
+using std::cout;
+using std::endl;
+
+#define DEFAULT_PORT "27015"
+#define BUFFER_SIZE 1500
+
+#pragma comment(lib, "Ws2_32.lib")
+
+void main()
+{
+	setlocale(LC_ALL, "");
+	// 1. init WinSock
+	WSADATA wsaData;
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+	if (iResult != 0)
+	{
+		cout << "WinSock init failed with error " << iResult << endl;
+		return;
+	}
+
+	// 2. create socket
+	addrinfo* result = NULL;
+	addrinfo* ptr = NULL;
+	addrinfo hInst;
+
+	ZeroMemory(&hInst, sizeof(hInst));
+	hInst.ai_family = AF_UNSPEC;
+	hInst.ai_socktype = SOCK_STREAM;
+	hInst.ai_protocol = IPPROTO_TCP;
+
+	iResult = getaddrinfo("192.168.56.1", DEFAULT_PORT, &hInst, &result);
+
+	if (iResult != 0)
+	{
+		cout << "getaddrinfo failed with error " << iResult << endl;
+		WSACleanup();
+		return;
+	}
+
+	SOCKET ConnectSocket = socket(hInst.ai_family, hInst.ai_socktype, hInst.ai_protocol);
+	if (ConnectSocket == INVALID_SOCKET)
+	{
+		cout << "Socket creation error " << WSAGetLastError() << endl;
+		freeaddrinfo(result);
+		WSACleanup();
+		return;
+	}
+
+	// 3. server connection
+	iResult = connect(ConnectSocket, hInst.ai_addr, hInst.ai_addrlen);
+	if (iResult == SOCKET_ERROR)
+	{
+		closesocket(ConnectSocket);
+		ConnectSocket = INVALID_SOCKET;
+	}
+	freeaddrinfo(result); // not needed anymore
+
+	if (ConnectSocket == INVALID_SOCKET)
+	{
+		cout << "Unable to connect to server.\n";
+		WSACleanup();
+		return;
+	}
+
+	// 4. send / receive data
+	const char sendbuffer[] = "hello server!!";
+	char recvbuffer[BUFFER_SIZE]{};
+
+	iResult = send(ConnectSocket, sendbuffer, strlen(sendbuffer), 0);
+	if (iResult == SOCKET_ERROR)
+	{
+		cout << "Sending data failed with error " << WSAGetLastError() << endl;
+		closesocket(ConnectSocket);
+		WSACleanup();
+		return;
+	}
+
+	int received = 0;
+	do
+	{
+		received = recv(ConnectSocket, recvbuffer, BUFFER_SIZE, 0);
+
+		if (received > 0) cout << "Bytes received: " << received << endl;
+		else if (received == 0) cout << "Connection closed.\n";
+		else cout << "Receive failed with error " << WSAGetLastError() << endl;
+	} while (received > 0);
+
+	// 5. close connection
+	iResult = shutdown(ConnectSocket, SD_SEND);
+	if (iResult == SOCKET_ERROR)
+	{
+		cout << "Shutdown failed with error " << WSAGetLastError() << endl;
+	}
+	closesocket(ConnectSocket);
+	WSACleanup();
+}

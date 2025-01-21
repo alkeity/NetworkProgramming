@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IP_calc", "IP_calc\IP_calc.vcxproj", "{59BA2F93-3844-4E1F-A5D8-6AF693115733}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "Server\Server.vcxproj", "{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "Client\Client.vcxproj", "{E8651410-4E78-4365-AAB5-EE553F6042CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,22 @@ Global
 		{59BA2F93-3844-4E1F-A5D8-6AF693115733}.Release|x64.Build.0 = Release|x64
 		{59BA2F93-3844-4E1F-A5D8-6AF693115733}.Release|x86.ActiveCfg = Release|Win32
 		{59BA2F93-3844-4E1F-A5D8-6AF693115733}.Release|x86.Build.0 = Release|Win32
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Debug|x64.ActiveCfg = Debug|x64
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Debug|x64.Build.0 = Debug|x64
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Debug|x86.ActiveCfg = Debug|Win32
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Debug|x86.Build.0 = Debug|Win32
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Release|x64.ActiveCfg = Release|x64
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Release|x64.Build.0 = Release|x64
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Release|x86.ActiveCfg = Release|Win32
+		{183C3263-A0A9-48FE-AEB2-8B6C15B6D811}.Release|x86.Build.0 = Release|Win32
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Debug|x64.ActiveCfg = Debug|x64
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Debug|x64.Build.0 = Debug|x64
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Debug|x86.ActiveCfg = Debug|Win32
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Debug|x86.Build.0 = Debug|Win32
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Release|x64.ActiveCfg = Release|x64
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Release|x64.Build.0 = Release|x64
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Release|x86.ActiveCfg = Release|Win32
+		{E8651410-4E78-4365-AAB5-EE553F6042CD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,6 +6,8 @@
 #include"resource.h"
 
 BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK DlgProcSubnets(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID InitLVColumn(LVCOLUMN column, LPSTR text, INT subitem);
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, INT nCmdShow)
 {
@@ -16,6 +18,11 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPSTR lpCmdLine, IN
 BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	CONST INT SIZE = 256;
+	DWORD ipAddress, ipMask = 0;
+	CHAR sz_buffer[SIZE];
+	HWND hIp = GetDlgItem(hwnd, IDC_IPADDRESS);
+	HWND hMask = GetDlgItem(hwnd, IDC_IPADDRESS_MASK);
+	HWND hPrefix = GetDlgItem(hwnd, IDC_EDIT_PREFIX);
 
 	switch (uMsg)
 	{
@@ -23,17 +30,13 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		HWND hUpDown = GetDlgItem(hwnd, IDC_SPIN);
 		SendMessage(hUpDown, UDM_SETRANGE, 0, MAKELPARAM(30, 1));
+		SendMessage(hIp, IPM_SETADDRESS, 0, 0xc0a864c8);
 		//AllocConsole();
 		//freopen("CONOUT$", "w", stdout);
 	}
 	break;
 	case WM_COMMAND:
 	{
-		DWORD ipAddress, ipMask = 0;
-		CHAR sz_buffer[SIZE];
-		HWND hIp = GetDlgItem(hwnd, IDC_IPADDRESS);
-		HWND hMask = GetDlgItem(hwnd, IDC_IPADDRESS_MASK);
-		HWND hPrefix = GetDlgItem(hwnd, IDC_EDIT_PREFIX);
 		switch (LOWORD(wParam))
 		{
 		case IDC_IPADDRESS:
@@ -73,6 +76,9 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
+		case IDC_BUTTON_SUBNETS:
+			DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG_SUBNETS), hwnd, (DLGPROC)DlgProcSubnets, 0);
+			break;
 		case ID_OK:
 		{
 			SendMessage(hIp, IPM_GETADDRESS, 0, (LPARAM)&ipAddress);
@@ -100,4 +106,42 @@ BOOL CALLBACK DlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		EndDialog(hwnd, 0);
 	}
 	return FALSE;
+}
+
+BOOL CALLBACK DlgProcSubnets(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	static HWND hList = GetDlgItem(hwnd, IDC_LIST_SUBNETS);
+	static LVCOLUMN lvcNetworkAddress;
+	static LVCOLUMN lvcBroadcastAddress;
+	static LVCOLUMN lvcNumberOfAddresses;
+	static LVCOLUMN lvcNumberOfHosts;
+	/*InitLVColumn(&lvcNetworkAddress, (LPSTR)"Network Address");
+	InitLVColumn(&lvcBroadcastAddress, (LPSTR)"Broadcast Address");
+	InitLVColumn(&lvcNumberOfAddresses, (LPSTR)"Number of IP addresses");
+	InitLVColumn(&lvcNumberOfHosts, (LPSTR)"Number of hosts");*/
+
+	switch (uMsg)
+	{
+	case WM_INITDIALOG:
+		SendMessage(hList, LVM_INSERTCOLUMN, 0, (LPARAM)&lvcNetworkAddress);
+		SendMessage(hList, LVM_INSERTCOLUMN, 1, (LPARAM)&lvcBroadcastAddress);
+		SendMessage(hList, LVM_INSERTCOLUMN, 2, (LPARAM)&lvcNumberOfAddresses);
+		SendMessage(hList, LVM_INSERTCOLUMN, 3, (LPARAM)&lvcNumberOfHosts);
+	break;
+	case WM_COMMAND:
+	break;
+	case WM_CLOSE:
+		EndDialog(hwnd, 0);
+	}
+	return FALSE;
+}
+
+VOID InitLVColumn(LPLVCOLUMN column, LPSTR text, INT subitem)
+{
+	ZeroMemory(column, sizeof(LVCOLUMN));
+	column->mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	column->cx = 50;
+	column->pszText = text;
+	column->iSubItem = subitem;
+	column->fmt = LVCFMT_LEFT;
 }
