@@ -90,12 +90,34 @@ void main()
 			return;
 		}
 
-		//CHAR szClientName[32];
-		int namelen = 32;
 		SOCKADDR clientSocket;
+		int namelen = sizeof(clientSocket);
+		char szClientName[INET6_ADDRSTRLEN] = "";
+		int clientPort = 0;
 		ZeroMemory(&clientSocket, sizeof(clientSocket));
 		getsockname(ClientSocket, &clientSocket, &namelen);
-		cout << "Client data: " << clientSocket.sa_data << endl;
+
+		switch (clientSocket.sa_family) // check for IPv4 or IPv6
+		{
+		case AF_INET:
+		{
+			SOCKADDR_IN* clientInfo = reinterpret_cast<SOCKADDR_IN*>(&clientSocket);
+			inet_ntop(AF_INET, &clientInfo->sin_addr, szClientName, INET6_ADDRSTRLEN);
+			clientPort = clientInfo->sin_port;
+			break;
+		}
+		case AF_INET6:
+		{
+			SOCKADDR_IN6* clientInfo = reinterpret_cast<SOCKADDR_IN6*>(&clientSocket);
+			inet_ntop(AF_INET, &clientInfo->sin6_addr, szClientName, INET6_ADDRSTRLEN);
+			clientPort = clientInfo->sin6_port;
+			break;
+		}
+		default:
+			break;
+		}
+		
+		cout << "Client data: " << szClientName << ":" << clientPort << endl;
 
 		//closesocket(ClientSocket);
 		//closesocket(ListenSocket);
