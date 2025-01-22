@@ -83,6 +83,7 @@ int __cdecl main()
 		closesocket(ConnectSocket);
 		ConnectSocket = INVALID_SOCKET;
 	}*/
+
 	freeaddrinfo(result); // not needed anymore
 
 	if (ConnectSocket == INVALID_SOCKET)
@@ -105,14 +106,22 @@ int __cdecl main()
 		return 1;
 	}
 
+	iResult = shutdown(ConnectSocket, SD_SEND);
+	if (iResult == SOCKET_ERROR)
+	{
+		cout << "Shutdown failed with error " << WSAGetLastError() << endl;
+	}
+
 	int received = 0;
 	do
 	{
 		received = recv(ConnectSocket, recvbuffer, BUFFER_SIZE, 0);
 
-		if (received > 0) cout << "Bytes received: " << received << endl;
+		if (received > 0) cout << "Bytes received: " << received << " Message: " << recvbuffer << endl;
 		else if (received == 0) cout << "Connection closed.\n";
 		else cout << "Receive failed with error " << WSAGetLastError() << endl;
+
+		
 	} while (received > 0);
 
 	// 5. close connection
@@ -123,6 +132,8 @@ int __cdecl main()
 	}
 	closesocket(ConnectSocket);
 	WSACleanup();
+
+	system("PAUSE");
 
 	return 0;
 }
