@@ -105,6 +105,7 @@ int __cdecl main()
 		cin.getline(userbuffer, 256);
 		char recvbuffer[BUFFER_SIZE]{};
 
+
 		iResult = send(ConnectSocket, userbuffer, strlen(userbuffer), 0);
 		if (iResult == SOCKET_ERROR)
 		{
