@@ -11,6 +11,11 @@ using std::endl;
 
 #pragma comment(lib, "Ws2_32.lib")
 
+union ClientSocketData
+{
+
+};
+
 void main()
 {
 	setlocale(LC_ALL, "");
@@ -133,7 +138,7 @@ void main()
 			if (received > 0)
 			{
 				cout << "Bytes received: " << received << " Message: " << recvbuffer << endl;
-				int iSendResult = send(ClientSocket, "Hello, Client.", strlen("Hello, Client."), 0);
+				int iSendResult = send(ClientSocket, recvbuffer, received, 0);
 				if (iSendResult == SOCKET_ERROR)
 				{
 					cout << "Sending data failed with error " << WSAGetLastError() << endl;
@@ -150,6 +155,7 @@ void main()
 				closesocket(ClientSocket);
 				//WSACleanup();
 			}
+			ZeroMemory(recvbuffer, sizeof(recvbuffer));
 		} while (received > 0);
 
 		// 7. disconnect
