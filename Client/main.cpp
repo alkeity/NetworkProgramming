@@ -105,16 +105,6 @@ int __cdecl main()
 		cin.getline(userbuffer, 256);
 		char recvbuffer[BUFFER_SIZE]{};
 
-
-		iResult = send(ConnectSocket, userbuffer, strlen(userbuffer), 0);
-		if (iResult == SOCKET_ERROR)
-		{
-			cout << "Sending data failed with error " << WSAGetLastError() << endl;
-			closesocket(ConnectSocket);
-			WSACleanup();
-			return 1;
-		}
-
 		if (strcmp(userbuffer, "exit") == 0)
 		{
 			cout << "exit started with msg " << userbuffer << endl;
@@ -128,14 +118,25 @@ int __cdecl main()
 			}
 			exit = true;
 		}
+		else
+		{
+			iResult = send(ConnectSocket, userbuffer, strlen(userbuffer), 0);
+			if (iResult == SOCKET_ERROR)
+			{
+				cout << "Sending data failed with error " << WSAGetLastError() << endl;
+				closesocket(ConnectSocket);
+				WSACleanup();
+				return 1;
+			}
 
-		int received = 0;
+			int received = 0;
 
-		received = recv(ConnectSocket, recvbuffer, BUFFER_SIZE, 0);
+			received = recv(ConnectSocket, recvbuffer, BUFFER_SIZE, 0);
 
-		if (received > 0) cout << "Bytes received: " << received << " Message: " << recvbuffer << endl;
-		else if (received == 0) cout << "Connection closed.\n";
-		else cout << "Receive failed with error " << WSAGetLastError() << endl;
+			if (received > 0) cout << "Bytes received: " << received << " Message: " << recvbuffer << endl;
+			else if (received == 0) cout << "Connection closed.\n";
+			else cout << "Receive failed with error " << WSAGetLastError() << endl;
+		}
 	} while (!exit);
 
 	// 5. close connection

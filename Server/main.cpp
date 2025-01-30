@@ -8,10 +8,9 @@ using std::endl;
 
 #define DEFAULT_PORT "27015"
 #define BUFFER_SIZE 1500
+#define MAX_CONNECTIONS 5
 
 #pragma comment(lib, "Ws2_32.lib")
-
-void HandleConnections(SOCKET ListenSocket);
 
 union ClientSocketData
 {
@@ -49,6 +48,9 @@ union ClientSocketData
 		return szClientName;
 	}
 };
+
+SOCKET ClientSockets[MAX_CONNECTIONS];
+void HandleConnections(LPVOID lParam);
 
 void main()
 {
@@ -117,70 +119,94 @@ void main()
 		return;
 	}
 	//CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)HandleConnections, &ListenSocket, 0, 0);
-	HandleConnections(ListenSocket);
+	//HandleConnections(ListenSocket);
+
+	HANDLE hThreadArray[MAX_CONNECTIONS];
+	DWORD dwThreadIDArray[MAX_CONNECTIONS];
+	int ClientIDs[MAX_CONNECTIONS]{};
+	int numberOfClients = 0;
+	while (true)
+	{
+		if (numberOfClients < MAX_CONNECTIONS)
+		{
+			ClientIDs[numberOfClients] = numberOfClients;
+
+			ClientSockets[numberOfClients] = accept(ListenSocket, NULL, NULL);
+			if (ClientSockets[numberOfClients] == INVALID_SOCKET)
+			{
+				cout << "Accept failed with error " << WSAGetLastError() << endl;
+				//closesocket(ListenSocket);
+				//WSACleanup();
+				return;
+			}
+
+			hThreadArray[numberOfClients] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)HandleConnections, &ClientIDs[numberOfClients], 0, &dwThreadIDArray[numberOfClients]);
+			numberOfClients++;
+			/*if (hThreadArray[threadAmount] == NULL)
+			{
+				ExitProcess(3);
+			}*/
+		}
+		else
+		{
+			return;
+		}
+	}
 
 	WSACleanup();
 	system("PAUSE");
 }
 
-void HandleConnections(SOCKET ListenSocket)
+void HandleConnections(LPVOID lParam)
 {
-	while (true)
+	cout << "enter" << endl;
+	int id = *((int*)lParam);
+	cout << id << endl;
+
+	SOCKADDR clientSocket;
+	int namelen = INET6_ADDRSTRLEN;
+	char szClientName[INET6_ADDRSTRLEN]{};
+	getpeername(ClientSockets[id], &clientSocket, &namelen);
+
+	cout << "Client data: " << ClientSocketData(clientSocket).getClientAddress(szClientName) << endl;
+
+	// 6. Receive / send data
+	char recvbuffer[BUFFER_SIZE]{};
+	int received = 0;
+
+	do
 	{
-		SOCKET ClientSocket = accept(ListenSocket, NULL, NULL);
-		if (ClientSocket == INVALID_SOCKET)
+		ZeroMemory(recvbuffer, BUFFER_SIZE);
+		received = recv(ClientSockets[id], recvbuffer, BUFFER_SIZE, 0);
+		cout << received << endl;
+		if (received > 0)
 		{
-			cout << "Accept failed with error " << WSAGetLastError() << endl;
-			//closesocket(ListenSocket);
-			//WSACleanup();
-			return;
-		}
-
-		SOCKADDR clientSocket;
-		int namelen = sizeof(clientSocket);
-		char szClientName[INET6_ADDRSTRLEN]{};
-		ZeroMemory(&clientSocket, sizeof(clientSocket));
-		//getsockname(ClientSocket, &clientSocket, &namelen);
-		getpeername(ClientSocket, &clientSocket, &namelen);
-
-		cout << "Client data: " << ClientSocketData(clientSocket).getClientAddress(szClientName) << endl;
-
-		// 6. Receive / send data
-		char recvbuffer[BUFFER_SIZE]{};
-		int received = 0;
-
-		do
-		{
-			received = recv(ClientSocket, recvbuffer, BUFFER_SIZE, 0);
-			cout << received << endl;
-			if (received > 0)
+			cout << "Bytes received from " << szClientName << ": " << received << " Message: " << recvbuffer << endl;
+			int iSendResult = send(ClientSockets[id], recvbuffer, received, 0);
+			if (iSendResult == SOCKET_ERROR)
 			{
-				cout << "Bytes received from " << szClientName << ": " << received << " Message: " << recvbuffer << endl;
-				int iSendResult = send(ClientSocket, recvbuffer, received, 0);
-				if (iSendResult == SOCKET_ERROR)
-				{
-					cout << "Sending data failed with error " << WSAGetLastError() << endl;
-					closesocket(ClientSocket);
-					WSACleanup();
-					return;
-				}
-				cout << "Bytes sent: " << iSendResult << endl;
-				ZeroMemory(recvbuffer, sizeof(recvbuffer));
+				cout << "Sending data failed with error " << WSAGetLastError() << endl;
+				closesocket(ClientSockets[id]);
+				WSACleanup();
+				return;
 			}
-			else if (received == 0) cout << "Connection closing...\n";
-			else
-			{
-				cout << "Receive failed with error " << WSAGetLastError() << endl;
-				closesocket(ClientSocket);
-			}
-		} while (received > 0);
-
-		// 7. disconnect
-		int iResult = shutdown(ClientSocket, SD_SEND);
-		if (iResult == SOCKET_ERROR)
-		{
-			cout << "Shutdown failed with error " << WSAGetLastError() << endl;
+			cout << "Bytes sent: " << iSendResult << endl;
 		}
-		closesocket(ClientSocket);
+		else if (received == 0) cout << "Connection closing...\n";
+		else
+		{
+			cout << "Receive failed with error " << WSAGetLastError() << endl;
+			closesocket(ClientSockets[id]);
+		}
+	} while (received > 0);
+
+	// 7. disconnect
+	cout << "disconnecting\n";
+	int iResult = shutdown(ClientSockets[id], SD_SEND);
+	if (iResult == SOCKET_ERROR)
+	{
+		cout << "Shutdown failed with error " << WSAGetLastError() << endl;
 	}
+	closesocket(ClientSockets[id]);
+	cout << "exit\n";
 }
